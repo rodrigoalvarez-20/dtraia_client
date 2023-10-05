@@ -4,13 +4,15 @@ export const ChatBox = () => {
 	const messages = [
 		{
 			id: 1,
-			text: 'Hello there',
-			name: 'Adrian Rodriguez',
+			text: 'Hola',
+			name: 'Usuario',
+			type: "USER"
 		},
 		{
 			id: 2,
-			text: 'Hi!',
-			name: 'Rodrigo Alvarez',
+			text: 'Texto de prueba',
+			name: 'Asistente',
+			type: "AI"
 		},
 	];
 
