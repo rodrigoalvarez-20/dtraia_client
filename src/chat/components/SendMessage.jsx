@@ -67,8 +67,8 @@ export const SendMessage = () => {
 
 	return (
 		<div
-			style={{ width: "-webkit-fill-available" }}
-			className="fixed bg-slate-300 bottom-0 py-10 shadow-lg">
+			style={{ }}
+			className="bg-slate-300 bottom-0 py-10 shadow-lg">
 			<form style={{ display: "flex", margin: "auto", width: "80%" }} onSubmit={handleSendMessage}>
 				<textarea
 					value={value}

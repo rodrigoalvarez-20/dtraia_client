@@ -46,6 +46,8 @@ export const Navbar = () => {
 				localStorage.setItem("token", "");
 				dispatch(setSession({}));
 			})
+		} else if (!tk || Object.keys(userSession).length === 0) {
+			navigate("/login", {replace: true});
 		}
 	}, []);
 

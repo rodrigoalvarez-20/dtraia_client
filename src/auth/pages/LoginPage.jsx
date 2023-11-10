@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { setSession } from '../../state/slicers/session';
 import { toast, ToastContainer } from 'react-toastify';
 import { useDispatch } from 'react-redux'
-import {sha256} from "js-sha256";
+import { PUB_KEY } from "../../assets/constants";
+import { sha256 } from "js-sha256";
+import { pki, md, mgf1, util } from "node-forge";
 import {OrbitProgress} from "react-loading-indicators";
 
 
@@ -31,10 +33,22 @@ export const LoginPage = () => {
 		setLoginState(true);
 		var email = e.target[0].value;
 		var pwd = e.target[1].value;
+
+		const pki_key = pki.publicKeyFromPem(PUB_KEY);
+		const sha_pwd = sha256(pwd);
+
+		const enc_pwd = pki_key.encrypt(sha_pwd, "RSA-OAEP", {
+			md: md.sha256.create(),
+			mgf1: mgf1.create()
+		});
+
+		const loginPayload = {
+			"email": email,
+			"password": util.encode64(enc_pwd)
+		}
 		
 		// Validaciones, despues
-		pwd = sha256(pwd);
-		axios.post("http://127.0.0.1:8000/api/users/login", { "email": email, "password": pwd }).then(r => {
+		axios.post("http://127.0.0.1:8000/api/users/login",loginPayload).then(r => {
 			toast.success(r.data["message"]);
 			const { user } = r.data;
 			localStorage.setItem("token", user.token);
@@ -65,8 +79,6 @@ export const LoginPage = () => {
 				rtl={false}
 				theme="light"
 			/>
-			{/* Same as */}
-			<ToastContainer />
 			<form onSubmit={handleLogin} className="bg-white p-8 shadow-md rounded-md mt-[-300px]">
 				<h1 className="text-6xl text-center font-bold mb-4">Acceder</h1>
 				<h4 className="text-3xl text-center text-slate-400 mb-8">
@@ -107,10 +119,6 @@ export const LoginPage = () => {
 					onClose={handleOnClose}
 					isVisible={isModalOpen}
 				/>
-
-				<h4 className="text-center text-slate-400">
-					O utiliza otra opcion
-				</h4>
 			</form>
 		</div>
 	);

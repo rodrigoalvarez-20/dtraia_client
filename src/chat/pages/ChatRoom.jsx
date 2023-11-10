@@ -11,16 +11,21 @@ import { useNavigate } from 'react-router-dom';
 const ChatRoom = () => {
 	const stateChatId = useSelector((state) => state.active_chat.value);
 	const chatMessages = useSelector((state) => state.messages.value);
+	const sessionState = useSelector((state) => state.session.value);
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	
-	//const [chatMessages, setChatMessages] = useState([]);
+	useEffect(() => {
+		if (Object.keys(sessionState).length === 0){
+			navigate ("/login", { replace: true });
+		}
+	}, [])
 
 	useEffect(() => {
 		console.log("Chat Messages updated");
 		const msgA = window.document.getElementById("messagesAnchor");
 		if (msgA){
-			msgA.scrollIntoView({ behavior: "smooth" })
+			msgA.scrollIntoView()
 		}
 		
 	}, [chatMessages])
@@ -32,16 +37,15 @@ const ChatRoom = () => {
 				console.log("Ha ocurrido un error al obtener la token");
 			}
 			axios.get(`http://localhost:8000/api/users/chat_history?chat_id=${stateChatId}`, { "headers": {"Authorization": tk}}).then(r => {
-				//console.log(r.data)
+				console.log(r.data)
 				dispatch(setInitialMessages({ "data": r.data["messages"] }))
 				//setChatMessages()
 			}).catch(e => {
+				console.log(e.response)
 				if (e.response && e.response.status === 401){
 					dispatch(deleteSession());
 					return navigate("/login", { replace: true })
 				}
-
-				console.log(e)
 			});
 		}
 	}, [stateChatId]);
@@ -52,7 +56,7 @@ const ChatRoom = () => {
 			<ChatsBar />
 			{
 				stateChatId === "" ? <p>Renderizar Tutorial</p> :
-					<div>
+					<div style={{ display: "flex", flexDirection: "column", width: "-webkit-fill-available", contain: "size" }}>
 						<ChatBox messages={chatMessages} />
 						<SendMessage />
 					</div>
