@@ -1,11 +1,26 @@
 import { useState } from 'react';
 import { ResetPasswordModal } from '../../ui';
+import { useNavigate } from 'react-router-dom';
+import { setSession } from '../../state/slicers/session';
+import { toast, ToastContainer } from 'react-toastify';
+import { useDispatch } from 'react-redux'
+import { PUB_KEY } from "../../assets/constants";
+import { sha256 } from "js-sha256";
+import { pki, md, mgf1, util } from "node-forge";
+import {OrbitProgress} from "react-loading-indicators";
+
+
+import axios from "axios";
 
 export const LoginPage = () => {
+	
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [loginState, setLoginState] = useState(false);
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
 
-	const toogleModal = () => {
-		event.preventDefault();
+	const toogleModal = (e) => {
+		e.preventDefault();
 		setIsModalOpen(!isModalOpen);
 	};
 
@@ -13,9 +28,58 @@ export const LoginPage = () => {
 		setIsModalOpen(false);
 	};
 
+	const handleLogin = (e) => {
+		e.preventDefault();
+		setLoginState(true);
+		var email = e.target[0].value;
+		var pwd = e.target[1].value;
+
+		const pki_key = pki.publicKeyFromPem(PUB_KEY);
+		const sha_pwd = sha256(pwd);
+
+		const enc_pwd = pki_key.encrypt(sha_pwd, "RSA-OAEP", {
+			md: md.sha256.create(),
+			mgf1: mgf1.create()
+		});
+
+		const loginPayload = {
+			"email": email,
+			"password": util.encode64(enc_pwd)
+		}
+		
+		// Validaciones, despues
+		axios.post("http://127.0.0.1:8000/api/users/login",loginPayload).then(r => {
+			toast.success(r.data["message"]);
+			const { user } = r.data;
+			localStorage.setItem("token", user.token);
+			delete user["token"]
+			dispatch(setSession(user));
+			return navigate("/chat", { replace: true })
+		}).catch(e => {
+			console.log(e);
+			const edata = e.response.data;
+			if (e.response.status != 500){
+				toast.warning(edata.error)
+			}else {
+				toast.error(edata.error)
+			}
+		}).finally(() => {
+			setLoginState(false);
+		});
+	}
+
 	return (
 		<div className="flex justify-center items-center h-screen">
-			<form className="bg-white p-8 shadow-md rounded-md mt-[-300px]">
+			<ToastContainer
+				position="top-right"
+				autoClose={5000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick
+				rtl={false}
+				theme="light"
+			/>
+			<form onSubmit={handleLogin} className="bg-white p-8 shadow-md rounded-md mt-[-300px]">
 				<h1 className="text-6xl text-center font-bold mb-4">Acceder</h1>
 				<h4 className="text-3xl text-center text-slate-400 mb-8">
 					Accede al sistema
@@ -35,13 +99,18 @@ export const LoginPage = () => {
 					placeholder="Contraseña"
 				/>
 				<div className="flex justify-center mt-4 pb-4">
-					<button className="bg-blue-500 text-white hover:bg-blue-600 py-2 px-4 rounded mr-2">
-						Acceder
-					</button>
+				{
+					loginState ? 
+							<div style={{ margin: "12px" }}>
+								<OrbitProgress color="#1200ff" size="small" text="" textColor="" />
+							</div> :
+							<button type='submit' className="bg-blue-500 text-white hover:bg-blue-600 py-2 px-4 rounded mr-2">
+								Acceder
+							</button>
+				}
 					<button
 						className="bg-gray-300 text-gray-700 hover:bg-gray-400 py-2 px-4 rounded"
-						onClick={() => toogleModal()}
-					>
+						onClick={toogleModal}>
 						Olvidaste tu contraseña?
 					</button>
 				</div>
@@ -50,10 +119,6 @@ export const LoginPage = () => {
 					onClose={handleOnClose}
 					isVisible={isModalOpen}
 				/>
-
-				<h4 className="text-center text-slate-400">
-					O utiliza otra opcion
-				</h4>
 			</form>
 		</div>
 	);

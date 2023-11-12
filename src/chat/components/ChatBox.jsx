@@ -1,24 +1,13 @@
 import { Message } from './Message';
 
-export const ChatBox = () => {
-	const messages = [
-		{
-			id: 1,
-			text: 'Hello there',
-			name: 'Adrian Rodriguez',
-		},
-		{
-			id: 2,
-			text: 'Hi!',
-			name: 'Rodrigo Alvarez',
-		},
-	];
-
+export const ChatBox = ({messages}) => {
+	
 	return (
-		<div className="pb-44 pt-20 containerWrap">
-			{messages.map((message) => (
-				<Message key={message.id} message={message} />
+		<div style={{ padding: "24px", overflow: "auto", contain: "content", flex: 1 }}>
+			{messages.map((message, idx) => (
+				<Message key={idx} message={message} />
 			))}
+			<div id="messagesAnchor" style={{ margin: "8px" }} />
 		</div>
 	);
 };
