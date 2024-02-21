@@ -7,10 +7,13 @@ import ChatsBar from '../../ui/components/ChatsBar';
 import { deleteSession } from '../../state/slicers/session';
 import { setInitialMessages } from '../../state/slicers/messages';
 import { useNavigate } from 'react-router-dom';
+import Lottie from "lottie-react";
+
+import chatholder from "../../assets/chats_animation.json";
+
 
 const ChatRoom = () => {
 	const stateChatId = useSelector((state) => state.active_chat.value);
-	const chatMessages = useSelector((state) => state.messages.value);
 	const sessionState = useSelector((state) => state.session.value);
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
@@ -22,23 +25,15 @@ const ChatRoom = () => {
 	}, [])
 
 	useEffect(() => {
-		console.log("Chat Messages updated");
-		const msgA = window.document.getElementById("messagesAnchor");
-		if (msgA){
-			msgA.scrollIntoView()
-		}
-		
-	}, [chatMessages])
-
-	useEffect(() => {
 		if (stateChatId){
 			const tk = localStorage.getItem("token");
 			if (!tk){
 				console.log("Ha ocurrido un error al obtener la token");
 			}
-			axios.get(`http://localhost:8000/api/users/chat_history?chat_id=${stateChatId}`, { "headers": {"Authorization": tk}}).then(r => {
+			axios.get(`${import.meta.env.VITE_API_HOST}/api/users/chat_history?chat_id=${stateChatId}`, { "headers": {"Authorization": tk}}).then(r => {
 				console.log(r.data)
-				dispatch(setInitialMessages({ "data": r.data["messages"] }))
+				const fmtMsgs = r.data["messages"].map(m => { return { ...m, message: m.message.replace("Not applicable if the user asks about another topic.", "").trim()  }})
+				dispatch(setInitialMessages({ "data": fmtMsgs }))
 				//setChatMessages()
 			}).catch(e => {
 				console.log(e.response)
@@ -51,13 +46,21 @@ const ChatRoom = () => {
 	}, [stateChatId]);
 
 
+	const TutorialComponent = () => {
+		return (
+			<div style={{ display: "flex", justifyContent:"center", alignItems: "center", margin:"auto", marginTop: "24px" }}>
+				<Lottie animationData={chatholder} loop={true} style={{ height: "50%", width: "80%" }} />
+			</div>
+		)
+	}
+
 	return (
 		<div style={{ height: "100%", display: "flex" }}>
 			<ChatsBar />
 			{
-				stateChatId === "" ? <p>Renderizar Tutorial</p> :
-					<div style={{ display: "flex", flexDirection: "column", width: "-webkit-fill-available", contain: "size" }}>
-						<ChatBox messages={chatMessages} />
+				stateChatId === "" ? <TutorialComponent /> :
+					<div style={{ display: "flex", flexDirection: "column", width: "100%", contain: "size" }}>
+						<ChatBox />
 						<SendMessage />
 					</div>
 			}

@@ -3,12 +3,14 @@ import { useDispatch } from 'react-redux'
 import { useSelector } from 'react-redux'
 import axios from "axios"
 import { addMessage } from '../../state/slicers/messages';
-import { OrbitProgress } from "react-loading-indicators";
+import { updateChatName } from '../../state/slicers/session';
+import MoonLoader from "react-spinners/MoonLoader";
 
 export const SendMessage = () => {
 	const stateChatId = useSelector((state) => state.active_chat.value);
 	const [isLoading, setIsLoading] = useState(false);
 	const [value, setValue] = useState('');
+	const [inputHeight, setInputHeight] = useState(46);
 	const dispatch = useDispatch();
 
 	const handleSendMessage = (e) => {
@@ -22,7 +24,7 @@ export const SendMessage = () => {
 			"question": value
 		}
 
-		var actual_date = new Date();
+		let actual_date = new Date();
 		const actualMonth = actual_date.getMonth() + 1;
 		const fmt_date = `${actual_date.getDate()}-${actualMonth}-${actual_date.getFullYear()}`
 		const fmt_hour = `${actual_date.getHours()}:${actual_date.getMinutes().toString().padStart(2, "0")}:${actual_date.getSeconds().toString().padStart(2, "0")}`
@@ -37,10 +39,10 @@ export const SendMessage = () => {
 
 		const tk = localStorage.getItem("token");
 		setIsLoading(true);
-		axios.post(`http://localhost:8000/api/chat/${stateChatId}`, payload, { "headers": { "Authorization": tk } }).then(r => {
-			console.log(r.data);
+		axios.post(`${import.meta.env.VITE_API_HOST}/api/chat/${stateChatId}`, payload, { "headers": { "Authorization": tk }, timeout: 1000*120 }).then(r => {
+			//console.log(r.data);
 			//Añadir la respuesta de la IA
-			var actual_date = new Date();
+			let actual_date = new Date();
 			const actualMonth = actual_date.getMonth() + 1;
 			const fmt_date = `${actual_date.getDate()}-${actualMonth}-${actual_date.getFullYear()}`
 			const fmt_hour = `${actual_date.getHours()}:${actual_date.getMinutes().toString().padStart(2, "0")}:${actual_date.getSeconds().toString().padStart(2, "0")}`
@@ -54,6 +56,11 @@ export const SendMessage = () => {
 					"datetime": fmt_datetime
 				}
 			}));
+
+			const new_topic = r.data.topic;
+
+			dispatch(updateChatName({ "chat_id": stateChatId, "new_name": new_topic }))
+
 		}).catch(e => {
 			console.log(e)
 		}).finally(() => {
@@ -69,19 +76,35 @@ export const SendMessage = () => {
 		<div
 			style={{ }}
 			className="bg-slate-300 bottom-0 py-10 shadow-lg">
-			<form style={{ display: "flex", margin: "auto", width: "80%" }} onSubmit={handleSendMessage}>
+			<form style={{ display: "flex", margin: "auto", width: "80%", color: "#555555" }} onSubmit={handleSendMessage}>
 				<textarea
 					value={value}
 					disabled={isLoading}
 					rows={5}
-					onChange={(e) => setValue(e.target.value)}
+					onChange={(e) => {
+						setValue(e.target.value)
+						if (e.target.value === "") {
+							setInputHeight(46)
+						} else {
+							setInputHeight(e.target.scrollHeight + 2)
+						}
+						
+					}}
+					style={{
+						height: `${Math.max(46, inputHeight)}px`,
+						maxHeight: "160px"
+					 }}
 					className="input w-full focus:outline-none bg-gray-100 rounded-r-none"
 					type="text"
 				/>
 				{
 					isLoading ? 
-					<div style={{ margin: "0 12px" }}>
-							<OrbitProgress color="#1200ff" size="small" text="" textColor="" />
+					<div style={{ margin: "auto 12px" }}>
+							<MoonLoader
+								loading={true}
+								size={32}
+								color='#1200ff'
+								aria-label="Loading Spinner" />
 					</div> :
 						<button
 							type="submit"
