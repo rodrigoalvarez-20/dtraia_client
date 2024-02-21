@@ -12,9 +12,9 @@ export const ResetPasswordModal = ({ isVisible, onClose }) => {
 	};
 
 	const handleSubmit = (e) => {
-		e.preventDefault;
+		e.preventDefault();
 		console.log('Enviar correo de recuperacion a: ', email);
-		onClose();
+		//onClose();
 	};
 
 	if (!isVisible) return null;
@@ -26,11 +26,10 @@ export const ResetPasswordModal = ({ isVisible, onClose }) => {
 		>
 			<div className="bg-white p-8 rounded-md shadow-lg max-w-lg">
 				<h2 className="text-3xl font-semibold mb-4 text-center">
-					Reinicie su contraseña
+					Reestablecer contraseña
 				</h2>
 				<h6 className="text-xl text-slate-400 text-center mb-4">
-					Introduzca su correo electronico y se le hará llegar un
-					enlace para restablecer su contraseña
+					Introduzca su correo electrónico para envio de correo de restablecimiento
 				</h6>
 				<form onSubmit={handleSubmit}>
 					<div className="mb-4">
@@ -38,7 +37,7 @@ export const ResetPasswordModal = ({ isVisible, onClose }) => {
 							type="email"
 							id="email"
 							className="mt-1 p-2 block w-full border rounded-md"
-							placeholder="Ingrese su dirección de correo"
+							placeholder="ejemplo@mail.com"
 							value={email}
 							onChange={handleEmailChange}
 							required
@@ -47,9 +46,9 @@ export const ResetPasswordModal = ({ isVisible, onClose }) => {
 					<div className="flex justify-center">
 						<button
 							type="submit"
-							className="bg-blue-500 text-white py-2 px-4 rounded"
+							className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-800"
 						>
-							Enviar Correo de Recuperación
+							Enviar
 						</button>
 					</div>
 				</form>

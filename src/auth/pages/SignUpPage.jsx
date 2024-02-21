@@ -2,23 +2,50 @@ import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { setSession } from '../../state/slicers/session';
 import { toast, ToastContainer } from 'react-toastify';
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { PUB_KEY } from "../../assets/constants";
 import { sha256 } from "js-sha256";
 import { pki, md, mgf1, util } from "node-forge";
-import { OrbitProgress } from "react-loading-indicators";
+import MoonLoader from "react-spinners/MoonLoader";
 import axios from "axios";
+import Lottie from "lottie-react";
+import PasswordInput from "../../ui/components/PasswordInput";
+import loadinganimation from "../../assets/loading_animation.json";
 
 export const SignUpPage = () => {
+	const userSession = useSelector((state) => state.session.value);
 	const [isLoading, setIsLoading] = useState(false);
-
+	const [generalLoading, setGeneralLoading] = useState(true);
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 
-
 	useEffect(() => {
-
-
+		console.log("Validating user session");
+		setGeneralLoading(true);
+		const tk = localStorage.getItem("token");
+		if (tk) {
+			const headers = {
+				"Authorization": tk
+			}
+			axios.get(`${import.meta.env.VITE_API_HOST}/api/users/profile`, { headers }).then(r => {
+				if (r.data) {
+					const userData = r.data;
+					console.log("Setting user session to STORE");
+					//console.log(userData)
+					dispatch(setSession(userData));
+					setGeneralLoading(false);
+					return navigate("/chat", { replace: true })
+				}
+				setGeneralLoading(false);
+			}).catch(error => {
+				console.log(error)
+				localStorage.setItem("token", "");
+				dispatch(setSession({}));
+				setGeneralLoading(false);
+			})
+		} else {
+			setGeneralLoading(false);
+		}
 	}, [])
 
 
@@ -28,7 +55,7 @@ export const SignUpPage = () => {
 		const user_name = e.target[0].value;
 		const user_email = e.target[1].value;
 		const user_pwd = e.target[2].value;
-		const user_pwdc = e.target[3].value;
+		const user_pwdc = e.target[4].value;
 		const regexPwd = new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
 
 		if (!regexPwd.test(user_pwd)) {
@@ -53,7 +80,7 @@ export const SignUpPage = () => {
 			"password": util.encode64(enc_pwd)
 		}
 		setIsLoading(true);
-		axios.post("http://127.0.0.1:8000/api/users/register", usr_payload).then(r => {
+		axios.post(`${import.meta.env.VITE_API_HOST}/api/users/register`, usr_payload).then(r => {
 			console.log(r.data)
 			if (r.status !== 201) {
 				toast.error(r.data.error);
@@ -67,9 +94,9 @@ export const SignUpPage = () => {
 			return navigate("/chat", { replace: true })
 		}).catch(error => {
 			console.log(error);
-			if (error.response.data){
+			if (error.response.data) {
 				toast.warn(error.response.data.error)
-			}else {
+			} else {
 				toast.error("Ha ocurrido un error al crear el usuario. Intente de nuevo.");
 			}
 		}).finally(() => {
@@ -80,7 +107,7 @@ export const SignUpPage = () => {
 	}
 
 	return (
-		<div>
+		<div className="flex justify-center items-center h-screen" style={{ margin: "auto 24px" }}>
 			<ToastContainer
 				position="top-right"
 				autoClose={5000}
@@ -90,61 +117,63 @@ export const SignUpPage = () => {
 				rtl={false}
 				theme="light"
 			/>
-			<div className="flex justify-center items-center h-screen">
-				<form id="registerForm" onSubmit={handleUserRegister} className="bg-white p-8 shadow-md rounded-md mt-[-200px]">
-					<h1 className="text-6xl text-center font-bold mb-4">
-						Registrarse
-					</h1>
-					<h4 className="text-3xl text-center text-slate-400 mb-8">
-						Rellene el siguiente formulario para darse de alta
-					</h4>
-					<input
-						className="w-full px-3 py-2 mb-4 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-						type="text"
-						name="name"
-						id="name"
-						required
-						placeholder="Nombre"
-					/>
-					<input
-						className="w-full px-3 py-2 mb-4 border rounded-md focus:outline-none  focus:ring focus:border-blue-300"
-						type="email"
-						name="email"
-						id="email"
-						required
-						placeholder="Email"
-					/>
-					<input
-						className="w-full px-3 py-2 border rounded-md focus:outline-none  focus:ring focus:border-blue-300"
-						type="password"
-						name="password"
-						id="password"
-						required
-						placeholder="Contraseña"
-					/>
-					<p className="muted mb-4 mt-2 text-center font-bold">* La contraseña debe de tener +8 caracteres, un caracter especial y un numero *</p>
-					<input
-						className="w-full px-3 py-2 mb-4 border rounded-md focus:outline-none  focus:ring focus:border-blue-300"
-						type="password"
-						name="confirm"
-						id="confirm"
-						required
-						placeholder="Confirme contraseña"
-					/>
-					<div className="flex justify-center">
-						{
-							isLoading ? <OrbitProgress color="#1200ff" size="small" text="" textColor="" /> :
-								<button
-									className="flex justify-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md mb-6"
-									type="submit"
-								>
-									Registrarse
-								</button>
-						}
+			{
+				generalLoading ? <Lottie animationData={loadinganimation} loop={true} style={{ height: "50%", width: "80%" }} /> :
+					<form
+						id="registerForm"
+						onSubmit={handleUserRegister}
+						style={{ margin: "auto 24px" }}
+						className="bg-white p-8 shadow-md rounded-md mt-[-200px]">
+						<p className="text-4xl text-center font-bold mb-4">
+							Registrarse
+						</p>
+						<input
+							className="w-full px-3 py-2 mb-4 border text-black rounded-md focus:outline-none focus:ring focus:border-blue-300"
+							type="text"
+							name="name"
+							id="name"
+							required
+							placeholder="Nombre"
+						/>
+						<input
+							className="w-full px-3 py-2 mb-4 border text-black rounded-md focus:outline-none  focus:ring focus:border-blue-300"
+							type="email"
+							name="email"
+							id="email"
+							required
+							placeholder="Email"
+						/>
+						<PasswordInput placeholder="Contraseña" id="pwd" name="pwd" />
+						<PasswordInput placeholder="Confirmar contraseña" id="cpwd" name="cpwd" />
+						<p className="muted mb-4 mt-2 text-center text-sm font-bold text-grey-600">
+							* La contraseña debe de tener +8 caracteres, un caracter especial y un numero *
+						</p>
+						<div className="flex" style={{ justifyContent: "space-around", alignItems: "center" }}>
+							<button
+								onClick={() => { navigate(-1) }}
+								className="bg-transparent hover:bg-gray-200 text-gray-500 rounded w-1/2 h-10 m-6"
+								type="button"
+							>
+								Regresar
+							</button>
+							{
+								isLoading ? <MoonLoader
+									loading={true}
+									size={28}
+									color='#1200ff'
+									aria-label="Loading Spinner" /> :
+									<button
+										className="m-6 bg-blue-500 hover:bg-blue-600 text-white rounded-md w-1/2 h-10"
+										type="submit"
+									>
+										Registrarse
+									</button>
+							}
 
-					</div>
-				</form>
-			</div>
+						</div>
+					</form>
+			}
+
 		</div>
 	);
 };

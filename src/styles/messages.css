@@ -1,0 +1,14 @@
+.qualify_button {
+    width: 32px;
+    height: 32px;
+    fill: white;
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 90%;
+    background-color: transparent;
+    margin: 0 3px;
+}
+
+.qualify_button:hover {
+    background-color: #414A4CB3;
+}
