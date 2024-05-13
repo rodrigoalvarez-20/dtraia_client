@@ -27,7 +27,7 @@ export const SignUpPage = () => {
 			const headers = {
 				"Authorization": tk
 			}
-			axios.get(`${import.meta.env.VITE_API_HOST}/api/users/profile`, { headers }).then(r => {
+			axios.get(`/api/users/profile`, { headers }).then(r => {
 				if (r.data) {
 					const userData = r.data;
 					console.log("Setting user session to STORE");
@@ -80,7 +80,7 @@ export const SignUpPage = () => {
 			"password": util.encode64(enc_pwd)
 		}
 		setIsLoading(true);
-		axios.post(`${import.meta.env.VITE_API_HOST}/api/users/register`, usr_payload).then(r => {
+		axios.post(`/api/users/register`, usr_payload).then(r => {
 			console.log(r.data)
 			if (r.status !== 201) {
 				toast.error(r.data.error);

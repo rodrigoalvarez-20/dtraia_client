@@ -9,6 +9,8 @@ import MoonLoader from "react-spinners/MoonLoader";
 export const SendMessage = () => {
 	const stateChatId = useSelector((state) => state.active_chat.value);
 	const [isLoading, setIsLoading] = useState(false);
+	const [seconds, setSeconds] = useState(0);
+	const [displaySeconds, setDisplaySeconds] = useState(false);
 	const [value, setValue] = useState('');
 	const [inputHeight, setInputHeight] = useState(46);
 	const dispatch = useDispatch();
@@ -31,15 +33,19 @@ export const SendMessage = () => {
 
 		const fmt_datetime = `${fmt_date} ${fmt_hour}`
 
-		dispatch(addMessage({ "data": {
-			"type": "human",
-			"message": value,
-			"datetime": fmt_datetime
-		}}));
+		dispatch(addMessage({
+			"data": {
+				"type": "human",
+				"message": value,
+				"datetime": fmt_datetime
+			}
+		}));
 
 		const tk = localStorage.getItem("token");
 		setIsLoading(true);
-		axios.post(`${import.meta.env.VITE_API_HOST}/api/chat/${stateChatId}`, payload, { "headers": { "Authorization": tk }, timeout: 1000*120 }).then(r => {
+		setSeconds(0);
+		setDisplaySeconds(true);
+		axios.post(`/api/chat/${stateChatId}`, payload, { "headers": { "Authorization": tk }, timeout: 1000 * 60 * 5 }).then(r => {
 			//console.log(r.data);
 			//Añadir la respuesta de la IA
 			let actual_date = new Date();
@@ -65,56 +71,75 @@ export const SendMessage = () => {
 			console.log(e)
 		}).finally(() => {
 			setIsLoading(false);
+			setDisplaySeconds(false);
 			setValue("");
 		})
-		
+
 
 	};
 
+	const Timer = ({ isActive, seconds, setSeconds }) => {
+		useEffect(() => {
+			if (isActive) {
+				const interval = setInterval(() => {
+					setSeconds(prevSeconds => prevSeconds + 1);
+				}, 1000);
+
+				return () => clearInterval(interval);
+			}
+
+		}, [isActive, setSeconds])
+
+		return <p className='text-xs' style={{ marginTop: "12px", color: "black" }}>{`Tiempo transcurrido: ${seconds} segundos`}</p>
+
+	}
 
 	return (
 		<div
-			style={{ }}
+			style={{}}
 			className="bg-slate-300 bottom-0 py-10 shadow-lg">
-			<form style={{ display: "flex", margin: "auto", width: "80%", color: "#555555" }} onSubmit={handleSendMessage}>
-				<textarea
-					value={value}
-					disabled={isLoading}
-					rows={5}
-					onChange={(e) => {
-						setValue(e.target.value)
-						if (e.target.value === "") {
-							setInputHeight(46)
-						} else {
-							setInputHeight(e.target.scrollHeight + 2)
-						}
-						
-					}}
-					style={{
-						height: `${Math.max(46, inputHeight)}px`,
-						maxHeight: "160px"
-					 }}
-					className="input w-full focus:outline-none bg-gray-100 rounded-r-none"
-					type="text"
-				/>
-				{
-					isLoading ? 
-					<div style={{ margin: "auto 12px" }}>
-							<MoonLoader
-								loading={true}
-								size={32}
-								color='#1200ff'
-								aria-label="Loading Spinner" />
-					</div> :
-						<button
-							type="submit"
-							className="w-auto bg-gray-500 text-white rounded-r-lg px-5 text-sm"
-						>
-							Send
-						</button>
-				}
+			<div style={{ display: "flex", flexDirection: "column", margin: "auto", width: "80%", color: "#555555" }}>
+				<form style={{ display: "flex", flexDirection: "row" }}  onSubmit={handleSendMessage}>
+					<textarea
+						value={value}
+						disabled={isLoading}
+						rows={5}
+						onChange={(e) => {
+							setValue(e.target.value)
+							if (e.target.value === "") {
+								setInputHeight(46)
+							} else {
+								setInputHeight(e.target.scrollHeight + 2)
+							}
 
-			</form>
+						}}
+						style={{
+							height: `${Math.max(46, inputHeight)}px`,
+							maxHeight: "160px"
+						}}
+						className="input w-full focus:outline-none bg-gray-100 rounded-r-none"
+						type="text"
+					/>
+					{
+						isLoading ?
+							<div style={{ margin: "auto 12px" }}>
+								<MoonLoader
+									loading={true}
+									size={32}
+									color='#1200ff'
+									aria-label="Loading Spinner" />
+							</div> :
+							<button
+								type="submit"
+								className="w-auto bg-gray-500 text-white rounded-r-lg px-5 text-sm"
+							>
+								Send
+							</button>
+					}
+				</form>
+				<Timer isActive={displaySeconds} seconds={seconds} setSeconds={setSeconds} />
+			</div>
+			
 		</div>
 	);
 };

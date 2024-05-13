@@ -30,7 +30,7 @@ export const LoginPage = () => {
 			const headers = {
 				"Authorization": tk
 			}
-			axios.get(`${import.meta.env.VITE_API_HOST}/api/users/profile`, { headers }).then(r => {
+			axios.get(`/api/users/profile`, { headers }).then(r => {
 				if (r.data) {
 					const userData = r.data;
 					console.log("Setting user session to STORE");
@@ -66,8 +66,8 @@ export const LoginPage = () => {
 	const handleLogin = (e) => {
 		e.preventDefault();
 		setLoginState(true);
-		var email = e.target[0].value;
-		var pwd = e.target[1].value;
+		let email = e.target[0].value;
+		let pwd = e.target[1].value;
 
 		const pki_key = pki.publicKeyFromPem(PUB_KEY);
 		const sha_pwd = sha256(pwd);
@@ -83,7 +83,7 @@ export const LoginPage = () => {
 		}
 
 		// Validaciones, despues
-		axios.post(`${import.meta.env.VITE_API_HOST}/api/users/login`, loginPayload).then(r => {
+		axios.post(`/api/users/login`, loginPayload).then(r => {
 			toast.success(r.data["message"]);
 			const { user } = r.data;
 			localStorage.setItem("token", user.token);
@@ -160,7 +160,7 @@ export const LoginPage = () => {
 								<button
 									className="bg-transparent text-black hover:bg-gray-300 py-2 px-4 rounded"
 									onClick={toogleModal}>
-									Olvidaste tu contraseña?
+									¿Olvidaste tu contraseña?
 								</button>
 							</div>
 						</form>
