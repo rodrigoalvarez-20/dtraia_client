@@ -48,7 +48,7 @@ const UserProfile = () => {
     useEffect(() => {
         //console.log(sessionState)
         setUserName(sessionState.nombre);
-        setCustomProfileImage(`/static/${sessionState.profilePic}?${new Date().getTime()}`)
+        setCustomProfileImage(`/api/static/${sessionState.profilePic}?${new Date().getTime()}`)
     }, [sessionState]);
 
 
@@ -100,11 +100,48 @@ const UserProfile = () => {
             }
         }).finally(() => {
             setIsLoading(false);
-            // TODO Actualizar los datos de la sesion
             setHasUploadedFile(false);
         })
 
     }
+
+    const deleteUserProfile = () => {
+        setIsLoading(true);
+        const tk = localStorage.getItem("token");
+        const config = {
+            headers: {
+                "Authorization": tk
+            },
+        };
+
+        axios.post(`/api/users/delete_profile`, {}, config).then(r => {
+            if (r.status !== 200) {
+                toast.error("Ha ocurrido un error al eliminar el perfil. Intente de nuevo.")
+            } else {
+                toast.success(r.data.message);
+                dispatch(deleteSession())
+                localStorage.removeItem("token");
+                setTimeout(() => {
+                    return navigate("/login", { replace: true });
+                }, 3000)
+            }
+        }).catch(err => {
+            console.log(err);
+            if (err.response && err.response.status === 401) {
+                dispatch(deleteSession());
+                return navigate("/login", { replace: true })
+            } else if (err.response) {
+                toast.warning(err.response.data.error)
+            } else {
+                toast.error("Ha ocurrido un error al realizar la peticion.")
+            }
+        }).finally(() => {
+            setIsLoading(false);
+            setHasUploadedFile(false);
+        })
+
+    }
+
 
     return (
         <div className="flex justify-center items-center h-screen" style={{ margin: "auto 24px" }}>
@@ -160,6 +197,7 @@ const UserProfile = () => {
                     <button
                         className="m-2 bg-red-500 hover:bg-red-600 text-white rounded-md h-10"
                         style={{ width: "50%", maxWidth: 220, minWidth: 180 }}
+                        onClick={deleteUserProfile}
                     >
                         Eliminar cuenta
                     </button>

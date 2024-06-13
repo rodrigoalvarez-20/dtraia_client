@@ -37,7 +37,7 @@ export const LoginPage = () => {
 					//console.log(userData)
 					dispatch(setSession(userData));
 					setGeneralLoading(false);
-					return navigate("/chat", { replace: true })
+					return navigate("/chat", { replace: true });
 				}
 				setGeneralLoading(false);
 			}).catch(error => {
@@ -82,14 +82,16 @@ export const LoginPage = () => {
 			"password": util.encode64(enc_pwd)
 		}
 
-		// Validaciones, despues
 		axios.post(`/api/users/login`, loginPayload).then(r => {
 			toast.success(r.data["message"]);
 			const { user } = r.data;
 			localStorage.setItem("token", user.token);
 			delete user["token"]
 			dispatch(setSession(user));
-			return navigate("/chat", { replace: true })
+			setTimeout(() => {
+				console.log("Redirecting...")
+				return navigate("/chat", { replace: true })
+			}, 3000)
 		}).catch(e => {
 			console.log(e);
 			const edata = e.response.data;

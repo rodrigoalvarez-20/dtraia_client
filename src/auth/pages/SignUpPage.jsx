@@ -91,7 +91,11 @@ export const SignUpPage = () => {
 			localStorage.setItem("token", user.token);
 			delete user["token"]
 			dispatch(setSession(user));
-			return navigate("/chat", { replace: true })
+			setTimeout(() => {
+				document.getElementById("registerForm").reset();
+				return navigate("/chat", { replace: true })
+			}, 3000)
+			
 		}).catch(error => {
 			console.log(error);
 			if (error.response.data) {
@@ -99,9 +103,9 @@ export const SignUpPage = () => {
 			} else {
 				toast.error("Ha ocurrido un error al crear el usuario. Intente de nuevo.");
 			}
+			document.getElementById("registerForm").reset();
 		}).finally(() => {
 			setIsLoading(false);
-			document.getElementById("registerForm").reset();
 		})
 
 	}

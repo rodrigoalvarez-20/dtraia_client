@@ -45,7 +45,7 @@ export const SendMessage = () => {
 		setIsLoading(true);
 		setSeconds(0);
 		setDisplaySeconds(true);
-		axios.post(`/api/chat/${stateChatId}`, payload, { "headers": { "Authorization": tk }, timeout: 1000 * 60 * 5 }).then(r => {
+		axios.post(`/api/chat/${stateChatId}`, payload, { "headers": { "Authorization": tk }, timeout: 1000 * 60 * 10 }).then(r => {
 			//console.log(r.data);
 			//Añadir la respuesta de la IA
 			let actual_date = new Date();

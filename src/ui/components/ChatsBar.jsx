@@ -114,7 +114,7 @@ const ChatsBar = () => {
                     label="Perfil"
                     
                     icon={
-                        <img src={`/static/${userSession.value.profilePic}?${new Date().getTime()}`}
+                        <img src={`/api/static/${userSession.value.profilePic}?${new Date().getTime()}`}
                             style={{ borderRadius: 16 }}
                             alt='Profile Icon' />
                     }

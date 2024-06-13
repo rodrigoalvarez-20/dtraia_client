@@ -47,7 +47,7 @@ const CodePanel = () => {
             "code_fragments": codesToExecute
         }
         const tk = localStorage.getItem("token");
-        axios.post(`/api/code`, code_body, { "headers": { "Authorization": tk } }).then(r => {
+        axios.post("/api/code/execute", code_body, { "headers": { "Authorization": tk } }).then(r => {
             //console.log(r.data);
             if (r.status !== 200) {
                 toast.warning("Ha ocurrido un error al ejecutar el codigo. Por favor intente de nuevo.");

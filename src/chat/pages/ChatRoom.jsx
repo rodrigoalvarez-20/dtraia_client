@@ -33,7 +33,7 @@ const ChatRoom = () => {
 				console.log("Ha ocurrido un error al obtener la token");
 			}
 			axios.get(`/api/users/chat_history?chat_id=${stateChatId}`, { "headers": {"Authorization": tk}}).then(r => {
-				console.log(r.data)
+				//console.log(r.data)
 				const fmtMsgs = r.data["messages"].map(m => { return { ...m, message: m.message.replace("Not applicable if the user asks about another topic.", "").trim()  }})
 				dispatch(setInitialMessages({ "data": fmtMsgs }))
 				//setChatMessages()

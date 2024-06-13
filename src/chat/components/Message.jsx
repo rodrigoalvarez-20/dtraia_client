@@ -29,7 +29,7 @@ export const Message = ({ message, parent_id }) => {
 		useEffect(() => {
 			const pythonRegex = /`{3}(\\n)*(python)+/g;
 			const messageSplited = message_data.message.split(pythonRegex);
-			setIsExecutable(messageSplited.length > 1)
+			setIsExecutable(messageSplited.length > 1 && message_data.message.includes("print"))
 		}, []);
 
 		const executeCode = () => {
@@ -49,7 +49,6 @@ export const Message = ({ message, parent_id }) => {
 				"amessage_id": actual_id,
 				"rating": rate
 			}
-
 			axios.post(`/api/rate_message/rate`, rateData, { headers: { "Authorization": tk } }).then(r => {
 				console.log(r.data);
 				dispatch(updateRate({ "message_id": actual_id, "rate": rate }))
@@ -114,24 +113,34 @@ export const Message = ({ message, parent_id }) => {
 			<div className="chat chat-start">
 				<div className="chat-image avatar">
 					<div className="w-10 rounded-full">
-						<img src={message.type === "human" ? `/static/${sessionState.profilePic}?${new Date().getTime()}` : ai_pic} alt={`${message.type} Message`} />
+						<img src={message.type === "human" ? `/api/static/${sessionState.profilePic}?${new Date().getTime()}` : assistant_icon} alt={`${message.type} Message`} />
 					</div>
 				</div>
 				<div className="chat-header">{message.type === "human" ? username : "Asistente"}</div>
-				<div className="chat-bubble">
+				<div className="chat-bubble" style={{maxWidth: "80%"}}  >
 					<Markdown
 						children={message.message}
 						components={{
 							code(props) {
 								const { children, className, node, ...rest } = props
-								const match = /language-(\w+)/.exec(className || '')
+								let match = /language-(\w+)/.exec(className || '')
+								if (match === null){
+									match = [ "text", "markdown" ]
+								}
+								let langname = match[1] ?? "text"
+								if (langname === "python"){
+									const hasPythonStatements = String(children).includes("print")
+									langname = hasPythonStatements ? "python" : "text"
+								}
 								return match ? (
 									<SyntaxHighlighter
 										{...rest}
 										PreTag="div"
-										customStyle={{ fontSize: "14px" }}
+										customStyle={{ fontSize: "14px", wordWrap: "break-word"}}
+										wrapLines={langname === "text"}
+										wrapLongLines={langname === "text"}
 										children={String(children).replace(/\n$/, '')}
-										language={match[1]}
+										language={langname}
 										style={darcula}
 									/>
 								) : (
