@@ -1,28 +1,20 @@
-import { CopyBlock, dracula } from "react-code-blocks";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Button } from 'flowbite-react';
-import Latex from "react-latex";
-import { sha256 } from "js-sha256";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import Markdown from 'react-markdown';
-import { dark, darcula } from 'react-syntax-highlighter/dist/esm/styles/prism'
-
-
-
-
-import user_pic from "../../assets/user_pic.jpg"
+import { darcula } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { updateRate } from '../../state/slicers/messages';
+import { togglePanel, setCodeToExecute } from "../../state/slicers/code_panel"
 import ai_pic from "../../assets/ai_pic.jpg"
-import user_icon from "../../assets/user_icon.png";
 import assistant_icon from "../../assets/assistant_icon.png"
-import exec_icon from "../../assets/execute_icon.png";
 import "../../styles/messages.css";
+import axios from "axios"
 
-
-
-export const Message = ({ message }) => {
+export const Message = ({ message, parent_id }) => {
 	const sessionState = useSelector((state) => state.session.value);
 	const [username, setUsername] = useState("Usuario")
+	//const dispatch = useDispatch();
 
 	useEffect(() => {
 		setUsername(sessionState.nombre)
@@ -30,15 +22,43 @@ export const Message = ({ message }) => {
 
 	
 
-	const AgentActionButtons = ({message_data}) => {
+	const AgentActionButtons = ({message_data, parent_id}) => {
+		const dispatch = useDispatch();
 		const [isExecutable, setIsExecutable] = useState(false);
 
 		useEffect(() => {
 			const pythonRegex = /`{3}(\\n)*(python)+/g;
 			const messageSplited = message_data.message.split(pythonRegex);
-			setIsExecutable(messageSplited.length > 1)
-
+			setIsExecutable(messageSplited.length > 1 && message_data.message.includes("print"))
 		}, []);
+
+		const executeCode = () => {
+			dispatch(setCodeToExecute(message_data.message))
+			dispatch(togglePanel())
+		}
+
+		function rate_answer(parent_id, actual_id, rate){
+
+			const tk = localStorage.getItem("token");
+			if (!tk) {
+				console.log("Ha ocurrido un error al obtener la token");
+			}
+
+			const rateData = {
+				"qmessage_id": parent_id,
+				"amessage_id": actual_id,
+				"rating": rate
+			}
+			axios.post(`/api/rate_message/rate`, rateData, { headers: { "Authorization": tk } }).then(r => {
+				console.log(r.data);
+				dispatch(updateRate({ "message_id": actual_id, "rate": rate }))
+			}).catch(e => {
+				console.log(e);
+				const edata = e.response.data;
+				alert(edata.error)
+			});
+			
+		}
 
 		return (
 			<div style={{ marginTop: "8px" }}>
@@ -46,6 +66,7 @@ export const Message = ({ message }) => {
 				<div style={{ display: "flex", flexDirection: "row", marginTop: "8px" }}>
 					<div style={{ flex: "1", display: "flex", justifyContent: "space-evenly", maxWidth: "160px", alignItems: "center" }}>
 						<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
+						onClick={() => rate_answer(parent_id, message_data["_id"], 1)}
 							className="qualify_button" style={{ backgroundColor: message_data.rate && message_data.rate === 1 ? "#004225" : "transparent" } }>
 							<title />
 							<g data-name="1" id="_1">
@@ -54,7 +75,8 @@ export const Message = ({ message }) => {
 							</g>
 						</svg>
 						<svg
-							style={{ backgroundColor: message_data.rate && message_data.rate === 0 ? "#960018" : "transparent" }} 
+							onClick={() => rate_answer(parent_id, message_data["_id"], 0)}
+							style={{ backgroundColor: message_data.rate === 0 ? "#960018" : "transparent" }} 
 							className="qualify_button" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 							<title />
 							<g data-name="1" id="_1">
@@ -66,7 +88,7 @@ export const Message = ({ message }) => {
 					{
 						isExecutable ?
 							<div style={{ flex: 4, justifyContent: "end", display: "flex", marginRight: "12px" }}>
-								<Button gradientDuoTone="purpleToBlue">
+								<Button onClick={executeCode} gradientDuoTone="purpleToBlue">
 									<svg style={{ fill: "white" }} baseProfile="tiny" height="24px" version="1.1" viewBox="0 0 512 512"
 										width="24px" xmlns="http://www.w3.org/2000/svg">
 										<g id="Layer_7">
@@ -91,23 +113,34 @@ export const Message = ({ message }) => {
 			<div className="chat chat-start">
 				<div className="chat-image avatar">
 					<div className="w-10 rounded-full">
-						<img src={message.type === "human" ? user_pic : ai_pic} alt={`${message.type} Message`} />
+						<img src={message.type === "human" ? `/api/static/${sessionState.profilePic}?${new Date().getTime()}` : assistant_icon} alt={`${message.type} Message`} />
 					</div>
 				</div>
 				<div className="chat-header">{message.type === "human" ? username : "Asistente"}</div>
-				<div className="chat-bubble">
+				<div className="chat-bubble" style={{maxWidth: "80%"}}  >
 					<Markdown
 						children={message.message}
 						components={{
 							code(props) {
 								const { children, className, node, ...rest } = props
-								const match = /language-(\w+)/.exec(className || '')
+								let match = /language-(\w+)/.exec(className || '')
+								if (match === null){
+									match = [ "text", "markdown" ]
+								}
+								let langname = match[1] ?? "text"
+								if (langname === "python"){
+									const hasPythonStatements = String(children).includes("print")
+									langname = hasPythonStatements ? "python" : "text"
+								}
 								return match ? (
 									<SyntaxHighlighter
 										{...rest}
 										PreTag="div"
+										customStyle={{ fontSize: "14px", wordWrap: "break-word"}}
+										wrapLines={langname === "text"}
+										wrapLongLines={langname === "text"}
 										children={String(children).replace(/\n$/, '')}
-										language={match[1]}
+										language={langname}
 										style={darcula}
 									/>
 								) : (
@@ -119,7 +152,7 @@ export const Message = ({ message }) => {
 						}}
 					/>
 					{
-						message.type === "ai" ? <AgentActionButtons message_data={message} /> : null
+						message.type === "ai" ? <AgentActionButtons message_data={message} parent_id={parent_id} /> : null
 					}
 				</div>
 			</div>

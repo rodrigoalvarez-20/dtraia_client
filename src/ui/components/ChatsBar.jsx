@@ -12,7 +12,7 @@ import delete_icon from "../../assets/delete.png";
 import { Button } from 'flowbite-react';
 
 import menu_icon from "../../assets/menu_icon.svg";
-import profile_icon from "../../assets/profile_icon.png"
+//import profile_icon from "../../assets/profile_icon.png"
 import bot_conv from "../../assets/bot_conv_icon.png";
 
 
@@ -48,7 +48,7 @@ const ChatsBar = () => {
             return navigate("/login", { replace: true })
         }
         setIsLoading(true);
-        axios.post(`${import.meta.env.VITE_API_HOST}/api/users/new_chat`, {}, { "headers": { "Authorization": tk } }).then(r => {
+        axios.post(`/api/users/new_chat`, {}, { "headers": { "Authorization": tk } }).then(r => {
             if (r.status !== 201) {
                 toast.error("Ha ocurrido un error al crear el chat");
                 return
@@ -78,7 +78,7 @@ const ChatsBar = () => {
                 "Authorization": tk
             }
             setIsDeleting(true);
-            axios.post(`${import.meta.env.VITE_API_HOST}/api/users/delete_chat?chat_id=${chatid}`, {}, { headers: headers }).then(r => {
+            axios.post(`/api/users/delete_chat?chat_id=${chatid}`, {}, { headers: headers }).then(r => {
                 if (r.status !== 200) {
                     toast.warning(r.data.error)
                     return
@@ -112,9 +112,15 @@ const ChatsBar = () => {
             <Menu style={{ maxWidth: "100%", textAlign: "center", justifyContent: "center", alignItems: "center", margin: "12px 24px" }}>
                 <SubMenu
                     label="Perfil"
-                    icon={<img src={profile_icon} alt='Profile Icon' />}
+                    
+                    icon={
+                        <img src={`/api/static/${userSession.value.profilePic}?${new Date().getTime()}`}
+                            style={{ borderRadius: 16 }}
+                            alt='Profile Icon' />
+                    }
                     style={{ backgroundColor: "transparent", textAlign: "center", marginBottom: 12 }}>
                     <MenuItem
+                        onClick={() => navigate("/profile")}
                         style={{
                             color: "gray",
                             backgroundColor: isCollapsed ? "black" : "transparent"
