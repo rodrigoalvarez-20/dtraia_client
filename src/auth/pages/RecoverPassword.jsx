@@ -7,6 +7,8 @@ import MoonLoader from "react-spinners/MoonLoader";
 import axios from "axios";
 import PasswordInput from "../../ui/components/PasswordInput";
 
+const API_URL = import.meta.env.VITE_API_HOST
+
 const RecoverPassword = () => {
 
     const [isLoading, setIsLoading ] = useState(false);
@@ -50,7 +52,7 @@ const RecoverPassword = () => {
 
         const payload = { "email": "", "password": util.encode64(enc_pwd) }
 
-        axios.post(`/api/users/reset_password`, payload , { "headers": headers }).then(r => {
+        axios.post(`${API_URL}/api/users/reset_password`, payload , { "headers": headers }).then(r => {
             console.log(r.data)
             if (r.status !== 200){
                 toast.error(r.data.error);

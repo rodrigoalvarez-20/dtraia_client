@@ -13,6 +13,7 @@ import Lottie from "lottie-react";
 import chatholder from "../../assets/chats_animation.json";
 import CodePanel from '../components/CodePanel';
 
+const API_URL = import.meta.env.VITE_API_HOST
 
 const ChatRoom = () => {
 	const stateChatId = useSelector((state) => state.active_chat.value);
@@ -32,7 +33,7 @@ const ChatRoom = () => {
 			if (!tk){
 				console.log("Ha ocurrido un error al obtener la token");
 			}
-			axios.get(`/api/users/chat_history?chat_id=${stateChatId}`, { "headers": {"Authorization": tk}}).then(r => {
+			axios.get(`${API_URL}/api/users/chat_history?chat_id=${stateChatId}`, { "headers": {"Authorization": tk}}).then(r => {
 				//console.log(r.data)
 				const fmtMsgs = r.data["messages"].map(m => { return { ...m, message: m.message.replace("Not applicable if the user asks about another topic.", "").trim()  }})
 				dispatch(setInitialMessages({ "data": fmtMsgs }))

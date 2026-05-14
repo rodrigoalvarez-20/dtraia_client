@@ -2,7 +2,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setCodeToExecute, togglePanel } from '../../state/slicers/code_panel';
 import { deleteSession } from '../../state/slicers/session';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { darcula } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { darcula, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import { sha256 } from "js-sha256";
@@ -18,6 +18,8 @@ import axios from 'axios';
 import codeanimation from "../../assets/code_animation.json";
 import SlidingPanel from 'react-sliding-side-panel';
 import 'react-sliding-side-panel/lib/index.css';
+
+const API_URL = import.meta.env.VITE_API_HOST
 
 const CodePanel = () => {
     const codePanel = useSelector((state) => state.code_panel.value);
@@ -47,7 +49,7 @@ const CodePanel = () => {
             "code_fragments": codesToExecute
         }
         const tk = localStorage.getItem("token");
-        axios.post("/api/code/execute", code_body, { "headers": { "Authorization": tk } }).then(r => {
+        axios.post(`${API_URL}/api/code/execute`, code_body, { "headers": { "Authorization": tk } }).then(r => {
             //console.log(r.data);
             if (r.status !== 200) {
                 toast.warning("Ha ocurrido un error al ejecutar el codigo. Por favor intente de nuevo.");
@@ -94,13 +96,13 @@ const CodePanel = () => {
         }
         setIsGeneratingImage(true);
         const tk = localStorage.getItem("token");
-        axios.get(`/api/code/network?project_id=${project_id}`, { "headers": { "Authorization": tk } }).then(r => {
+        axios.get(`${API_URL}/api/code/network?project_id=${project_id}`, { "headers": { "Authorization": tk } }).then(r => {
             console.log(r.data);
             if (r.status !== 200) {
                 toast.warning("Ha ocurrido un error al generar la vista previa de la topologia. Por favor intente de nuevo.");
             } else {
                 toast.success(r.data.message)
-                setNetworkUrlImage(r.data.image)
+                setNetworkUrlImage(`${API_URL}${r.data.image}`)
                 setIsGeneratingImage(false);
             }
         }).catch(e => {
@@ -141,7 +143,7 @@ const CodePanel = () => {
                     PreTag="div"
                     customStyle={{ width: "100%", fontSize: "12px", maxHeight: "450px" }}
                     language="json"
-                    style={darcula}>
+                    style={oneLight}>
                     {JSON.stringify(JSON.parse(jsonRespose), null, 2)}
                 </SyntaxHighlighter>
             )

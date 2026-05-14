@@ -12,6 +12,8 @@ import Lottie from "lottie-react";
 import PasswordInput from "../../ui/components/PasswordInput";
 import loadinganimation from "../../assets/loading_animation.json";
 
+const API_URL = import.meta.env.VITE_API_HOST
+
 export const SignUpPage = () => {
 	const userSession = useSelector((state) => state.session.value);
 	const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +29,7 @@ export const SignUpPage = () => {
 			const headers = {
 				"Authorization": tk
 			}
-			axios.get(`/api/users/profile`, { headers }).then(r => {
+			axios.get(`${API_URL}/api/users/profile`, { headers }).then(r => {
 				if (r.data) {
 					const userData = r.data;
 					console.log("Setting user session to STORE");
@@ -80,7 +82,7 @@ export const SignUpPage = () => {
 			"password": util.encode64(enc_pwd)
 		}
 		setIsLoading(true);
-		axios.post(`/api/users/register`, usr_payload).then(r => {
+		axios.post(`${API_URL}/api/users/register`, usr_payload).then(r => {
 			console.log(r.data)
 			if (r.status !== 201) {
 				toast.error(r.data.error);

@@ -6,6 +6,8 @@ import { addMessage } from '../../state/slicers/messages';
 import { updateChatName } from '../../state/slicers/session';
 import MoonLoader from "react-spinners/MoonLoader";
 
+const API_URL = import.meta.env.VITE_API_HOST
+
 export const SendMessage = () => {
 	const stateChatId = useSelector((state) => state.active_chat.value);
 	const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +47,7 @@ export const SendMessage = () => {
 		setIsLoading(true);
 		setSeconds(0);
 		setDisplaySeconds(true);
-		axios.post(`/api/chat/${stateChatId}`, payload, { "headers": { "Authorization": tk }, timeout: 1000 * 60 * 10 }).then(r => {
+		axios.post(`${API_URL}/api/chat/${stateChatId}`, payload, { "headers": { "Authorization": tk }, timeout: 1000 * 60 * 10 }).then(r => {
 			//console.log(r.data);
 			//Añadir la respuesta de la IA
 			let actual_date = new Date();

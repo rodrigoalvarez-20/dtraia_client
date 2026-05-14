@@ -3,13 +3,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { Button } from 'flowbite-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import Markdown from 'react-markdown';
-import { darcula } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { darcula, gruvboxLight, materialLight, materialOceanic, oneLight, xonokai } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { updateRate } from '../../state/slicers/messages';
 import { togglePanel, setCodeToExecute } from "../../state/slicers/code_panel"
-import ai_pic from "../../assets/ai_pic.jpg"
-import assistant_icon from "../../assets/assistant_icon.png"
+//import ai_pic from "../../assets/ai_pic.jpg"
+import assistant_icon from "../../assets/ai_pic.jpg"
 import "../../styles/messages.css";
 import axios from "axios"
+
+const API_URL = import.meta.env.VITE_API_HOST
 
 export const Message = ({ message, parent_id }) => {
 	const sessionState = useSelector((state) => state.session.value);
@@ -29,7 +31,8 @@ export const Message = ({ message, parent_id }) => {
 		useEffect(() => {
 			const pythonRegex = /`{3}(\\n)*(python)+/g;
 			const messageSplited = message_data.message.split(pythonRegex);
-			setIsExecutable(messageSplited.length > 1 && message_data.message.includes("print"))
+			//&& message_data.message.includes("print")
+			setIsExecutable(messageSplited.length > 1 )
 		}, []);
 
 		const executeCode = () => {
@@ -49,7 +52,7 @@ export const Message = ({ message, parent_id }) => {
 				"amessage_id": actual_id,
 				"rating": rate
 			}
-			axios.post(`/api/rate_message/rate`, rateData, { headers: { "Authorization": tk } }).then(r => {
+			axios.post(`${API_URL}/api/rate_message/rate`, rateData, { headers: { "Authorization": tk } }).then(r => {
 				console.log(r.data);
 				dispatch(updateRate({ "message_id": actual_id, "rate": rate }))
 			}).catch(e => {
@@ -113,7 +116,7 @@ export const Message = ({ message, parent_id }) => {
 			<div className="chat chat-start">
 				<div className="chat-image avatar">
 					<div className="w-10 rounded-full">
-						<img src={message.type === "human" ? `/api/static/${sessionState.profilePic}?${new Date().getTime()}` : assistant_icon} alt={`${message.type} Message`} />
+						<img src={message.type === "human" ? `${API_URL}/api/static/${sessionState.profilePic}?${new Date().getTime()}` : assistant_icon} alt={`${message.type} Message`} />
 					</div>
 				</div>
 				<div className="chat-header">{message.type === "human" ? username : "Asistente"}</div>
@@ -124,24 +127,26 @@ export const Message = ({ message, parent_id }) => {
 							code(props) {
 								const { children, className, node, ...rest } = props
 								let match = /language-(\w+)/.exec(className || '')
+								
 								if (match === null){
 									match = [ "text", "markdown" ]
 								}
 								let langname = match[1] ?? "text"
+								
 								if (langname === "python"){
-									const hasPythonStatements = String(children).includes("print")
+									const hasPythonStatements = String(children).includes("import")
 									langname = hasPythonStatements ? "python" : "text"
 								}
 								return match ? (
 									<SyntaxHighlighter
 										{...rest}
 										PreTag="div"
-										customStyle={{ fontSize: "14px", wordWrap: "break-word"}}
+										customStyle={{ fontSize: "16px", wordWrap: "break-word"}}
 										wrapLines={langname === "text"}
 										wrapLongLines={langname === "text"}
 										children={String(children).replace(/\n$/, '')}
 										language={langname}
-										style={darcula}
+										style={oneLight}
 									/>
 								) : (
 									<code {...rest} className={className}>

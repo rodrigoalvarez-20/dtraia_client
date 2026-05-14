@@ -14,6 +14,8 @@ import loadinganimation from "../../assets/loading_animation.json";
 import axios from "axios";
 import PasswordInput from '../../ui/components/PasswordInput';
 
+const API_URL = import.meta.env.VITE_API_HOST
+
 export const LoginPage = () => {
 	const userSession = useSelector((state) => state.session.value);
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,7 +32,7 @@ export const LoginPage = () => {
 			const headers = {
 				"Authorization": tk
 			}
-			axios.get(`/api/users/profile`, { headers }).then(r => {
+			axios.get(`${API_URL}/api/users/profile`, { headers }).then(r => {
 				if (r.data) {
 					const userData = r.data;
 					console.log("Setting user session to STORE");
@@ -82,7 +84,7 @@ export const LoginPage = () => {
 			"password": util.encode64(enc_pwd)
 		}
 
-		axios.post(`/api/users/login`, loginPayload).then(r => {
+		axios.post(`${API_URL}/api/users/login`, loginPayload).then(r => {
 			toast.success(r.data["message"]);
 			const { user } = r.data;
 			localStorage.setItem("token", user.token);

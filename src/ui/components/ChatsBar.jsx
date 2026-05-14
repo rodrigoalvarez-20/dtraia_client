@@ -18,6 +18,8 @@ import bot_conv from "../../assets/bot_conv_icon.png";
 
 import "../../styles/chatsbar.css";
 
+const API_URL = import.meta.env.VITE_API_HOST
+
 const ChatsBar = () => {
     const userSession = useSelector((state) => state.session)
     const stateChatId = useSelector((state) => state.active_chat.value);
@@ -48,7 +50,7 @@ const ChatsBar = () => {
             return navigate("/login", { replace: true })
         }
         setIsLoading(true);
-        axios.post(`/api/users/new_chat`, {}, { "headers": { "Authorization": tk } }).then(r => {
+        axios.post(`${API_URL}/api/users/new_chat`, {}, { "headers": { "Authorization": tk } }).then(r => {
             if (r.status !== 201) {
                 toast.error("Ha ocurrido un error al crear el chat");
                 return
@@ -78,7 +80,7 @@ const ChatsBar = () => {
                 "Authorization": tk
             }
             setIsDeleting(true);
-            axios.post(`/api/users/delete_chat?chat_id=${chatid}`, {}, { headers: headers }).then(r => {
+            axios.post(`${API_URL}/api/users/delete_chat?chat_id=${chatid}`, {}, { headers: headers }).then(r => {
                 if (r.status !== 200) {
                     toast.warning(r.data.error)
                     return
@@ -114,7 +116,7 @@ const ChatsBar = () => {
                     label="Perfil"
                     
                     icon={
-                        <img src={`/api/static/${userSession.value.profilePic}?${new Date().getTime()}`}
+                        <img src={`${API_URL}/api/static/${userSession.value.profilePic}?${new Date().getTime()}`}
                             style={{ borderRadius: 16 }}
                             alt='Profile Icon' />
                     }

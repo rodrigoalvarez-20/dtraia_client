@@ -7,6 +7,8 @@ import SyncLoader from "react-spinners/SyncLoader";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_HOST
+
 const UserProfile = () => {
     const sessionState = useSelector((state) => state.session.value);
     const stateChatId = useSelector((state) => state.active_chat.value);
@@ -28,7 +30,7 @@ const UserProfile = () => {
             navigate("/login", { replace: true });
         } else {
             const tk = localStorage.getItem("token");
-            axios.get(`/api/users/profile`, { headers: { "Authorization": tk } }).then(r => {
+            axios.get(`${API_URL}/api/users/profile`, { headers: { "Authorization": tk } }).then(r => {
                 if (r.status !== 200) {
                     toast.error("Ha ocurrido un error al validar la sesion")
                     setTimeout(() => {
@@ -48,7 +50,7 @@ const UserProfile = () => {
     useEffect(() => {
         //console.log(sessionState)
         setUserName(sessionState.nombre);
-        setCustomProfileImage(`/api/static/${sessionState.profilePic}?${new Date().getTime()}`)
+        setCustomProfileImage(`${API_URL}/api/static/${sessionState.profilePic}?${new Date().getTime()}`)
     }, [sessionState]);
 
 
@@ -81,7 +83,7 @@ const UserProfile = () => {
             },
         };
         
-        axios.patch(`/api/users/profile`, formData, config).then(r => {
+        axios.patch(`${API_URL}/api/users/profile`, formData, config).then(r => {
             if (r.status !== 200) {
                 toast.error("Ha ocurrido un error al actualizar el perfil. Intente de nuevo.")
             }else{
@@ -114,7 +116,7 @@ const UserProfile = () => {
             },
         };
 
-        axios.post(`/api/users/delete_profile`, {}, config).then(r => {
+        axios.post(`${API_URL}/api/users/delete_profile`, {}, config).then(r => {
             if (r.status !== 200) {
                 toast.error("Ha ocurrido un error al eliminar el perfil. Intente de nuevo.")
             } else {
